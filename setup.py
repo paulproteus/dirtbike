@@ -12,4 +12,12 @@ setup(name='dirtbike',
       author_email='asheesh@asheesh.org',
       url='https://github.com/paulproteus/dirtbike',
       packages=['dirtbike'],
+      install_requires=[
+          'wheel',
+      ],
+      entry_points={
+          'console_scripts': [
+              'dirtbike = dirtbike:main',
+          ],
+      },
 )
