@@ -8,8 +8,8 @@ dirtbike
 Purpose of the software
 -----------------------
 
-This is a Python program that takes packages that are already installed
-on a system and converst them to wheels.
+This is a Python program that takes packages that are already
+installed on a system and converts them to wheels.
 
 That is an admittedly strange goal. The deeper purpose is to help
 packages like `pip` vendor their dependencies in a way compatible with
