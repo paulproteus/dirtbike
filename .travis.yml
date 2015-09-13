@@ -2,5 +2,5 @@ language: python
 python:
   - "2.7"
   - "3.4"
-build: pip install --editable .
+install: pip install --editable .
 script: /bin/true
