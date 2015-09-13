@@ -1,6 +1,10 @@
 dirtbike
 ========
 
+.. image:: https://img.shields.io/travis/paulproteus>/dirtbike.svg
+   :target: https://travis-ci.org/paulproteus/dirtbike
+
+
 Purpose of the software
 -----------------------
 
