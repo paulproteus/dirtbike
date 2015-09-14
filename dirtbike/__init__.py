@@ -11,23 +11,15 @@ import subprocess
 import wheel.bdist_wheel
 
 
-def _mkdir_ok_exists(dirname):
-    try:
-        os.mkdir(dirname)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
-
-
 def _mkdir_p(dirname):
     if not dirname:
         raise ValueError("I refuse to operate on false-y values.")
 
-    path_components = dirname.split('/')
-    for i in range(len(path_components)):
-        leading_path_component = '/'.join(path_components[:i+1])
-        if leading_path_component:
-            _mkdir_ok_exists(leading_path_component)
+    try:
+        os.makedirs(dirname)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
 
 def _copy_file_making_dirs_as_needed(src, dst):
