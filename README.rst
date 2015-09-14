@@ -27,7 +27,7 @@ License
 This software is available under the terms of the same license as
 `pya/pip`::
 
-  Copyright (c) 2008-2014 The pip developers (see AUTHORS.txt file)
+  Copyright (c) 2008-2014 The developers (see AUTHORS.txt file)
 
   Permission is hereby granted, free of charge, to any person
   obtaining a copy of this software and associated documentation files
