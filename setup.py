@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='dirtbike',
       version='0.1',
