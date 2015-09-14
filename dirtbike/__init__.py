@@ -3,6 +3,7 @@ from __future__ import (
 )
 
 import distutils.dist
+import errno
 import os
 import pkg_resources
 import shutil
@@ -14,9 +15,7 @@ def _mkdir_ok_exists(dirname):
     try:
         os.mkdir(dirname)
     except OSError as e:
-        if e.errno == 17:  # File exists
-            pass
-        else:
+        if e.errno != errno.EEXIST:
             raise
 
 
