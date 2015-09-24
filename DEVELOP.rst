@@ -74,3 +74,11 @@ If you want to isolate a single test, you can do it like this:
 
 This only runs the test suite against Python 3.4, and it only runs tests
 matching the given *pattern*, which is just a Python regular expression.
+
+
+Notes
+=====
+
+Generally, subcommands which are overly verbose have most of their spew
+suppressed.  You can see the gory details if you set the environment variable
+`DIRTBIKE_DEBUG` to any non-empty value.
