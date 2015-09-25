@@ -35,7 +35,7 @@ debootstrap --include=$INCLUDES $DISTRO $CHROOT_DIR
 
 # On Ubuntu chroots, make sure universe is enabled.
 
-if $VENDOR = "Ubuntu"
+if [ "$VENDOR" = "Ubuntu" ]
 then
     schroot -u root -c source:$CHROOT -- add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ $DISTRO universe"
 fi
