@@ -121,7 +121,8 @@ class TestDirtbike(unittest.TestCase):
                 ],
                 stdout=DEVNULL, stderr=DEVNULL)
             result = subprocess.check_output([
-                sys.executable, '-c', 'import stupid; stupid.yes()'],
+                sys.executable, '-c', 'import stupid; stupid.yes()'
+                ],
                 env=dict(PYTHONPATH=tempdir.name),
                 universal_newlines=True)
         self.assertEqual(result, 'yes\n')
@@ -184,10 +185,19 @@ class TestDirtbike(unittest.TestCase):
             'schroot', '-u', 'root', '-rc', session_id, '--',
             'apt-get', 'purge', '-y', '{}-stupid'.format(prefix),
             ],
-            #stdout=DEVNULL, stderr=DEVNULL)
-            )
+            stdout=DEVNULL, stderr=DEVNULL)
+        # What's the name of the .whl file?
         result = subprocess.check_output([
             'schroot', '-u', 'root', '-rc', session_id, '--',
-            python_cmd, '-c', 'import stupid; stupid.yes()'
+            'find', 'dist', '-name', '*.whl',
+            ], universal_newlines=True)
+        wheels = [entry.strip() for entry in result.splitlines()]
+        self.assertEqual(len(wheels), 1, wheels)
+        wheel = wheels[0]
+        result = subprocess.check_output([
+            'schroot', '-u', 'root', '-rc', session_id,
+            '--preserve-environment', '--',
+            python_cmd, '-c', 'import stupid; stupid.yes()',
             ],
-            env=dict(PYTHONPATH='foo'), universal_newlines=True)
+            env=dict(PYTHONPATH=wheel), universal_newlines=True)
+        self.assertEqual(result, 'yes\n')
