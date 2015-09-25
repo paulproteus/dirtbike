@@ -3,6 +3,7 @@ set -euo pipefail
 
 ARCH=`dpkg-architecture -q DEB_HOST_ARCH`
 DISTRO=`lsb_release -cs`
+VENDOR=`lsb_release -is`
 CHROOT=dirtbike-$DISTRO-$ARCH
 CHROOT_DIR=/var/lib/schroot/chroots/$CHROOT
 INCLUDES=eatmydata,gdebi-core,software-properties-common,python3.5
@@ -32,6 +33,10 @@ EOF
 mkdir -p $CHROOT_DIR
 debootstrap --include=$INCLUDES $DISTRO $CHROOT_DIR
 
-# Make sure universe is enabled in the chroot.
-schroot -u root -c source:$CHROOT -- add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ $DISTRO universe"
+# On Ubuntu chroots, make sure universe is enabled.
+
+if $VENDOR = "Ubuntu"
+then
+    schroot -u root -c source:$CHROOT -- add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ $DISTRO universe"
+fi
 schroot -u root -c source:$CHROOT -- apt-get update
