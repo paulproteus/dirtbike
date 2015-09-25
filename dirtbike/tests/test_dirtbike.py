@@ -93,10 +93,18 @@ class TestDirtbike(unittest.TestCase):
             print('KEEPING SESSION:', session_id, file=sys.stderr)
             print()
         else:
-            self.addCleanup(
-                subprocess.check_call,
-                ['schroot', '-u', 'root', '-c', session_id, '--end-session'])
+            self.addCleanup(self._end_session, session_id)
         return session_id
+
+    def _end_session(self, session_id):
+        subprocess.check_call([
+            'schroot', '-u', 'root', '-rc', session_id, '--',
+            'rm', '-rf', 'dist',
+            ],
+            stdout=DEVNULL, stderr=DEVNULL)
+        subprocess.check_call([
+            'schroot', '-u', 'root', '-c', session_id, '--end-session'
+            ])
 
     def test_sanity_check_wheel(self):
         # Sanity check that the setUpClass() created the wheel, that it can be

@@ -5,6 +5,7 @@ ARCH=`dpkg-architecture -q DEB_HOST_ARCH`
 DISTRO=`lsb_release -cs`
 CHROOT=dirtbike-$DISTRO-$ARCH
 CHROOT_DIR=/var/lib/schroot/chroots/$CHROOT
+INCLUDES=eatmydata,gdebi-core,software-properties-common,python3.5
 
 echo "Creating schroot $CHROOT"
 
@@ -29,7 +30,7 @@ preserve-environment=false
 EOF
 
 mkdir -p $CHROOT_DIR
-debootstrap --include=eatmydata,gdebi-core,software-properties-common $DISTRO $CHROOT_DIR
+debootstrap --include=$INCLUDES $DISTRO $CHROOT_DIR
 
 # Make sure universe is enabled in the chroot.
 schroot -u root -c source:$CHROOT -- add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ $DISTRO universe"
