@@ -20,7 +20,8 @@ the following packages:
 * schroot
 * tox
 
-And probably more stuff I'm forgetting.
+And probably more stuff I'm forgetting.  You might have to ``apt-get install
+python3.5`` manually.
 
 
 Setting things up
@@ -40,6 +41,17 @@ This creates an overlay schroot named ``dirtbike-<distro>-<arch>`` where
 and *arch* is your host's architecture (e.g. ``amd64``).  Thus, after running
 the ``mkchroot.sh`` command, running ``schroot -l`` should list something like
 ``dirtbike-wily-amd64``.
+
+
+The stupid project
+==================
+
+The test suite uses a simple pure-Python project pulled in as a git
+submodule.  Be sure to do this once after you clone this repository, if you
+didn't already do ``git clone --recursive``.
+
+    $ git submodule init
+    $ git submodule update
 
 
 Tearing things down
