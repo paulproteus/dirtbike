@@ -8,6 +8,13 @@ CHROOT=dirtbike-$DISTRO-$ARCH
 CHROOT_DIR=/var/lib/schroot/chroots/$CHROOT
 INCLUDES=eatmydata,gdebi-core,software-properties-common,python3.5
 
+if [ "$VENDOR" = "Ubuntu" ]
+then
+    UNIONTYPE=overlayfs
+else
+    UNIONTYPE=overlay
+fi
+
 echo "Creating schroot $CHROOT"
 
 cat > /etc/schroot/chroot.d/$CHROOT<<EOF
@@ -22,7 +29,7 @@ root-groups=sbuild,root
 type=directory
 profile=default
 command-prefix=eatmydata
-union-type=overlayfs
+union-type=$UNIONTYPE
 directory=$CHROOT_DIR
 
 source-root-users=root,sbuild,admin
@@ -40,3 +47,5 @@ then
     schroot -u root -c source:$CHROOT -- add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ $DISTRO universe"
 fi
 schroot -u root -c source:$CHROOT -- apt-get update
+
+echo "schroot $CHROOT is ready"
