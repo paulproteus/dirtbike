@@ -45,7 +45,7 @@ except AttributeError:
         def __init__(self):
             self._path = tempfile.mkdtemp()
         def __enter__(self):
-            return self
+            return self.name
         def __exit__(self, *exc):
             self.cleanup()
             return False
@@ -117,13 +117,13 @@ class TestDirtbike(unittest.TestCase):
         wheel = wheels[0]
         with temporary_directory() as tempdir:
             subprocess.check_call([
-                'pip', 'install', '--target', tempdir.name, wheel,
+                'pip', 'install', '--target', tempdir, wheel,
                 ],
                 stdout=DEVNULL, stderr=DEVNULL)
             result = subprocess.check_output([
                 sys.executable, '-c', 'import stupid; stupid.yes()'
                 ],
-                env=dict(PYTHONPATH=tempdir.name),
+                env=dict(PYTHONPATH=tempdir),
                 universal_newlines=True)
         self.assertEqual(result, 'yes\n')
 
