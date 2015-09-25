@@ -5,7 +5,7 @@
 dirtbike is maintained on `GitHub <https://github.com/paulproteus/dirtbike>`__
 
 You're only going to be able to run and test dirtbike on a Debian (or
-derivative) system.  To run the test suite, you'll need to `apt-get install`
+derivative) system.  To run the test suite, you'll need to ``apt-get install``
 the following packages:
 
 * debootstrap
@@ -20,7 +20,7 @@ the following packages:
 * schroot
 * tox
 
-And probably more stuff I don't remember.
+And probably more stuff I'm forgetting.
 
 
 Setting things up
@@ -35,11 +35,11 @@ You only need to do this once:
 
     $ sudo ./mkchroot.sh
 
-This creates an overlay schroot named `dirtbike-<distro>-<arch>` where
-*distro* is the code name of your distribution (e.g. `unstable`, `wily`), and
-*arch* is your host's architecture (e.g. `amd64`).  Thus, after running the
-`mkchroot.sh` command, running `schroot -l` should list something like
-`dirtbike-wily-amd64`.
+This creates an overlay schroot named ``dirtbike-<distro>-<arch>`` where
+*distro* is the code name of your distribution (e.g. ``unstable``, ``wily``),
+and *arch* is your host's architecture (e.g. ``amd64``).  Thus, after running
+the ``mkchroot.sh`` command, running ``schroot -l`` should list something like
+``dirtbike-wily-amd64``.
 
 
 Tearing things down
@@ -56,7 +56,7 @@ If you want to clean your system up, just run:
 
 which of course deletes the dirtbike schroot directory and configuration
 file.  If later you want to run the test suite again, you'll have to recreate
-the schroot with the `mkchroot.sh` script.
+the schroot with the ``mkchroot.sh`` script.
 
 
 Running the tests
@@ -80,10 +80,10 @@ Notes
 
 Generally, subcommands which are overly verbose have most of their spew
 suppressed.  You can see the gory details if you set the environment variable
-`DIRTBIKE_DEBUG` to any non-empty value.
+``DIRTBIKE_DEBUG`` to any non-empty value.
 
 If you want to keep the schroot sessions around after the test suite finishes,
-set the environment variable `DIRTBIKE_DEBUG_SESSIONS` to any non-empty value.
-The session ids will be printed, and it's up to you to end them explicitly.
-Note that multiple new , randomly named sessions may be created.  You can
-destroy them all all quickly with `schroot -e --all-sessions`.
+set the environment variable ``DIRTBIKE_DEBUG_SESSIONS`` to any non-empty
+value.  The session ids will be printed, and it's up to you to end them
+explicitly.  Note that multiple new , randomly named sessions may be created.
+You can destroy them all all quickly with ``schroot -e --all-sessions``.
