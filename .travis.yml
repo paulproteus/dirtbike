@@ -24,7 +24,10 @@ before_install:
   - echo 'en_US.UTF-8 UTF-8' | sudo dd of=/etc/locale.gen
   - sudo /usr/sbin/locale-gen
   - sudo apt-get install python-six/jessie
-  - curl https://bootstrap.pypa.io/get-pip.py | sudo python
-install:
-  - pip install --user --editable .
-script: /bin/bash tests.sh
+  # Install some additional dependencies.
+  - sudo apt-get install debootstrap dpkg-dev lsb-release python python-stdeb python-wheel python3 python3-stdeb python3-wheel schroot tox
+before_script:
+  - sudo ./mkchroot.sh
+script: tox
+after_script:
+  - sudo ./rmchroot.sh
