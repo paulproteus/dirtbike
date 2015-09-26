@@ -12,7 +12,7 @@ before_install:
   - echo 'Dpkg::Options { "--force-confdef"; "--force-confnew"; }' | sudo dd of=/etc/apt/apt.conf.d/99conf
   # Trans-grade to Debian.
   - sudo rm /etc/apt/sources.list
-  - echo 'deb http://mirror.mit.edu/debian/ jessie main' | sudo dd of=/etc/apt/sources.list
+  - echo 'deb http://mirror.mit.edu/debian/ unstable main' | sudo dd of=/etc/apt/sources.list
   - sudo apt-get --quiet=2 update
   - sudo apt-get --quiet=2 --force-yes -y install debian-archive-keyring >/dev/null
   - sudo apt-get --quiet=2 update
@@ -23,9 +23,9 @@ before_install:
   # Make sure locales are in a healthy shape.
   - echo 'en_US.UTF-8 UTF-8' | sudo dd of=/etc/locale.gen
   - sudo /usr/sbin/locale-gen
-  - sudo apt-get install python-six/jessie
+  - sudo apt-get install python-six
   # Install some additional dependencies.
-  - sudo apt-get install debootstrap dpkg-dev lsb-release python python-stdeb python-wheel python3 python3-stdeb python3-wheel schroot python-tox
+  - sudo apt-get install debootstrap dpkg-dev lsb-release python python-stdeb python-wheel python3 python3-stdeb python3-wheel schroot tox
 before_script:
   - sudo ./mkchroot.sh
 script: tox

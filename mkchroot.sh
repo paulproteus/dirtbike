@@ -6,7 +6,7 @@ DISTRO=`lsb_release -cs`
 VENDOR=`lsb_release -is`
 CHROOT=dirtbike-$DISTRO-$ARCH
 CHROOT_DIR=/var/lib/schroot/chroots/$CHROOT
-INCLUDES=eatmydata,gdebi-core,software-properties-common
+INCLUDES=eatmydata,gdebi-core,software-properties-common,python3.5
 
 if [ "$VENDOR" = "Ubuntu" ]
 then
@@ -47,9 +47,5 @@ then
     schroot -u root -c source:$CHROOT -- add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ $DISTRO universe"
 fi
 schroot -u root -c source:$CHROOT -- apt-get update
-
-# Try to install Python 3.5, which may or may not be available in the chroot
-# depending on its version.  It's okay if this fails.
-schroot -u root -c source:$CHROOT -- apt-get install -y --force-yes python3.5 || echo "Python 3.5 is not available... skipping"
 
 echo "schroot $CHROOT is ready"
