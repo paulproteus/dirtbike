@@ -33,8 +33,9 @@ before_script:
   # We're on a trans-graded Ubuntu box so force Debian unstable.
   - export VENDOR=Debian DISTRO=unstable
   - sudo -E ./mkchroot.sh
-  # Add the current user to sbuild group so they can enter the chroot.
+  # XXX Debugging!
   - cat /etc/group
+  # Add the current user to sbuild group so they can enter the chroot.
   - sudo usermod -aG sbuild $USER
 script:
   - export VENDOR=Debian DISTRO=unstable
