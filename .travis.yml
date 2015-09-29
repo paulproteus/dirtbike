@@ -32,9 +32,9 @@ before_install:
 before_script:
   # We're on a trans-graded Ubuntu box so force Debian unstable.
   - export VENDOR=Debian DISTRO=unstable
-  - bash ./mkchroot.sh
+  - sudo -E ./mkchroot.sh
 script: tox
 after_script:
   # We're on a trans-graded Ubuntu box so force Debian unstable.
   - export VENDOR=Debian DISTRO=unstable
-  - bash ./rmchroot.sh
+  - sudo -E ./rmchroot.sh
