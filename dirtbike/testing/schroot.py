@@ -1,3 +1,4 @@
+import os
 import sys
 
 from dirtbike.testing.helpers import call, output
@@ -29,8 +30,15 @@ class Session:
 
     def start(self):
         assert self.id is None, 'Session already started'
-        arch = output('dpkg-architecture -q DEB_HOST_ARCH').strip()
-        distro = output('lsb_release -cs').strip()
+        # The Travis CI tests transgrade from Ubuntu to Debian, so first look
+        # in various environment variables to see if the arch and distro are
+        # overridden.  If not, figure out some defaults.
+        arch = os.environ.get('ARCH')
+        distro = os.environ.get('DISTRO')
+        if arch is None:
+            arch = output('dpkg-architecture -q DEB_HOST_ARCH').strip()
+        if distro is None:
+            distro = output('lsb_release -cs').strip()
         chroot_name = 'dirtbike-{}-{}'.format(distro, arch)
         self.id = output(
             ['schroot', '-u', 'root', '-c', chroot_name, '--begin-session']

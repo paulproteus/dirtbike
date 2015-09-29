@@ -33,7 +33,9 @@ before_script:
   # We're on a trans-graded Ubuntu box so force Debian unstable.
   - export VENDOR=Debian DISTRO=unstable
   - sudo -E ./mkchroot.sh
-script: tox
+script:
+  - export VENDOR=Debian DISTRO=unstable
+  - tox
 after_script:
   # We're on a trans-graded Ubuntu box so force Debian unstable.
   - export VENDOR=Debian DISTRO=unstable
