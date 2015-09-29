@@ -1,9 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-ARCH=`dpkg-architecture -q DEB_HOST_ARCH`
-DISTRO=`lsb_release -cs`
-VENDOR=`lsb_release -is`
+ARCH=${ARCH:-`dpkg-architecture -q DEB_HOST_ARCH`}
+DISTRO=${DISTRO:-`lsb_release -cs`}
+VENDOR=${VENDOR:-`lsb_release -is`}
+
 CHROOT=dirtbike-$DISTRO-$ARCH
 CHROOT_DIR=/var/lib/schroot/chroots/$CHROOT
 INCLUDES=eatmydata,gdebi-core,software-properties-common,python3.5

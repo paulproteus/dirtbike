@@ -5,7 +5,9 @@ language: c
 before_install:
   ### Now do the fun part: trans-grade to Debian.
   # Remove some packages that we get from Debian anyway.
-  - sudo apt-get --quiet=2 remove --purge -y mongodb-10gen mysql-client-core-5.5 man-db fontconfig >/dev/null
+  - sudo apt-get --quiet=2 remove --purge -y mongodb-10gen mysql-client-core-5.5 man-db >/dev/null
+  # Remove a problematic and likely unnecessary package.
+  - sudo apt-get --quiet=2 remove --purge -y fontconfig >/dev/null
   # Remove some packages that actively depend on locales working properly.
   - sudo apt-get --quiet=2 remove postgresql-9.1 postgresql-contrib-9.1 postgresql-9.2 postgresql-contrib-9.2 postgresql-9.3 postgresql-contrib-9.3 postgresql-9.4 postgresql-contrib-9.4 >/dev/null
   # Tell dpkg it is OK to choose the new config files, without prompting.
@@ -28,7 +30,11 @@ before_install:
   # Install some additional dependencies.
   - sudo apt-get install debootstrap dpkg-dev lsb-release python python-stdeb python-wheel python3 python3-stdeb python3-wheel schroot tox
 before_script:
+  # We're on a trans-graded Ubuntu box so force Debian unstable.
+  - export VENDOR=Debian DISTRO=unstable
   - sudo ./mkchroot.sh
 script: tox
 after_script:
+  # We're on a trans-graded Ubuntu box so force Debian unstable.
+  - export VENDOR=Debian DISTRO=unstable
   - sudo ./rmchroot.sh
