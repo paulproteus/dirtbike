@@ -38,6 +38,7 @@ before_script:
   - sudo usermod -aG sbuild $USER
 script:
   - export VENDOR=Debian DISTRO=unstable
+  - newgrp sbuild
   - tox
 after_script:
   # We're on a trans-graded Ubuntu box so force Debian unstable.
