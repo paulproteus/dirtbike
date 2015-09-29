@@ -34,6 +34,7 @@ before_script:
   - export VENDOR=Debian DISTRO=unstable
   - sudo -E ./mkchroot.sh
   # Add the current user to sbuild group so they can enter the chroot.
+  - cat /etc/group
   - sudo usermod -aG sbuild $USER
 script:
   - export VENDOR=Debian DISTRO=unstable
