@@ -5,7 +5,7 @@ language: c
 before_install:
   ### Now do the fun part: trans-grade to Debian.
   # Remove some packages that we get from Debian anyway.
-  - sudo apt-get --quiet=2 remove --purge -y mongodb-10gen mysql-client-core-5.5 man-db >/dev/null
+  - sudo apt-get --quiet=2 remove --purge -y mongodb-10gen mysql-client-core-5.5 man-db fontconfig >/dev/null
   # Remove some packages that actively depend on locales working properly.
   - sudo apt-get --quiet=2 remove postgresql-9.1 postgresql-contrib-9.1 postgresql-9.2 postgresql-contrib-9.2 postgresql-9.3 postgresql-contrib-9.3 postgresql-9.4 postgresql-contrib-9.4 >/dev/null
   # Tell dpkg it is OK to choose the new config files, without prompting.
