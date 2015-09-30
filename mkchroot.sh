@@ -4,6 +4,7 @@ set -euo pipefail
 ARCH=${ARCH:-`dpkg-architecture -q DEB_HOST_ARCH`}
 DISTRO=${DISTRO:-`lsb_release -cs`}
 VENDOR=${VENDOR:-`lsb_release -is`}
+GROUPS=${GROUPS:-sbuild,root}
 
 CHROOT=dirtbike-$DISTRO-$ARCH
 CHROOT_DIR=/var/lib/schroot/chroots/$CHROOT
@@ -21,8 +22,8 @@ echo "Creating schroot $CHROOT"
 cat > /etc/schroot/chroot.d/$CHROOT<<EOF
 [$CHROOT]
 description=$CHROOT
-groups=sbuild,root
-root-groups=sbuild,root
+groups=$GROUPS
+root-groups=$GROUPS
 # Uncomment these lines to allow members of these groups to access
 # the -source chroots directly (useful for automated updates, etc).
 #source-root-users=sbuild,root
