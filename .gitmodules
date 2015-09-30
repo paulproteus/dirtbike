@@ -1,4 +1,4 @@
 [submodule "dirtbike/tests/example/stupid"]
 	path = dirtbike/tests/example/stupid
-	url = https://gitlab.com/warsaw/stupid.git
+	url = git@gitlab.com:warsaw/stupid.git
 	branch = pure-python
