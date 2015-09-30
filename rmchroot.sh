@@ -1,9 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-ARCH=${ARCH:-`dpkg-architecture -q DEB_HOST_ARCH`}
-DISTRO=${DISTRO:-`lsb_release -cs`}
-VENDOR=${VENDOR:-`lsb_release -is`}
+CH_ARCH=${CH_ARCH:-`dpkg-architecture -q DEB_HOST_ARCH`}
+CH_DISTRO=${CH_DISTRO:-`lsb_release -cs`}
+CH_VENDOR=${CH_VENDOR:-`lsb_release -is`}
+CH_GROUPS=${CH_GROUPS:-"sbuild,root"}
 
 CHROOT=dirtbike-$DISTRO-$ARCH
 CHROOT_DIR=/var/lib/schroot/chroots/$CHROOT

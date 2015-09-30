@@ -31,15 +31,13 @@ before_install:
   - sudo apt-get install debootstrap dpkg-dev lsb-release python python-stdeb python-wheel python3 python3-stdeb python3-wheel schroot tox
 before_script:
   # We're on a trans-graded Ubuntu box so force Debian unstable.
-  - export VENDOR=Debian DISTRO=unstable GROUPS="$USER,root"
+  - export CH_VENDOR=Debian CH_DISTRO=unstable CH_GROUPS="$(id -gn),root"
   - sudo -E ./mkchroot.sh
-  - echo $USER
-  - echo $GROUPS
   - cat /etc/schroot/chroot.d/dirtbike-unstable-amd64
 script:
-  - export VENDOR=Debian DISTRO=unstable
+  - export CH_DISTRO=unstable
   - tox
 after_script:
   # We're on a trans-graded Ubuntu box so force Debian unstable.
-  - export VENDOR=Debian DISTRO=unstable
+  - export CH_DISTRO=unstable
   - sudo -E ./rmchroot.sh

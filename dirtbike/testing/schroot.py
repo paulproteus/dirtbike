@@ -33,8 +33,8 @@ class Session:
         # The Travis CI tests transgrade from Ubuntu to Debian, so first look
         # in various environment variables to see if the arch and distro are
         # overridden.  If not, figure out some defaults.
-        arch = os.environ.get('ARCH')
-        distro = os.environ.get('DISTRO')
+        arch = os.environ.get('CH_ARCH')
+        distro = os.environ.get('CH_DISTRO')
         if arch is None:
             arch = output('dpkg-architecture -q DEB_HOST_ARCH').strip()
         if distro is None:
