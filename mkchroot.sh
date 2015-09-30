@@ -4,7 +4,7 @@ set -euo pipefail
 ARCH=${ARCH:-`dpkg-architecture -q DEB_HOST_ARCH`}
 DISTRO=${DISTRO:-`lsb_release -cs`}
 VENDOR=${VENDOR:-`lsb_release -is`}
-GROUPS=${GROUPS:-sbuild,root}
+GROUPS=${GROUPS:-"sbuild,root"}
 
 CHROOT=dirtbike-$DISTRO-$ARCH
 CHROOT_DIR=/var/lib/schroot/chroots/$CHROOT
@@ -17,7 +17,7 @@ else
     UNIONTYPE=overlay
 fi
 
-echo "Creating schroot $CHROOT"
+echo "Creating schroot $CHROOT for $GROUPS"
 
 cat > /etc/schroot/chroot.d/$CHROOT<<EOF
 [$CHROOT]
