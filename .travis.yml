@@ -34,6 +34,7 @@ before_script:
   - export VENDOR=Debian DISTRO=unstable GROUPS="$USER,root"
   - sudo -E ./mkchroot.sh
   - echo $USER
+  - echo $GROUPS
   - cat /etc/schroot/chroot.d/dirtbike-unstable-amd64
 script:
   - export VENDOR=Debian DISTRO=unstable
