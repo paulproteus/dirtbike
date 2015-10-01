@@ -4,7 +4,7 @@ sudo: true
 language: c
 before_install:
   # Upgrade to Trusty at least.
-  - rm -f /etc/apt/sources.list
+  - sudo rm -f /etc/apt/sources.list
   - echo 'deb http://us.archive.ubuntu.com/ubuntu/ trusty main universe' | sudo dd of=/etc/apt/sources.list
   - sudo apt-get --quiet=2 update
   - sudo apt-get --quiet=2 -y --force-yes dist-upgrade
