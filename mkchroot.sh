@@ -10,11 +10,9 @@ CHROOT=dirtbike-$CH_DISTRO-$CH_ARCH
 CHROOT_DIR=/var/lib/schroot/chroots/$CHROOT
 INCLUDES=eatmydata,gdebi-core,software-properties-common,python3.5
 
-# Don't use $CH_VENDOR for this decision.  It must reflect the actual host
-# vendor rather than the chroot vendor.
-if [ `lsb_release -is` = "Ubuntu" ]
+if [ "$CH_VENDOR" = "Ubuntu" ]
 then
-    UNIONTYPE=overlay
+    UNIONTYPE=overlayfs
 else
     UNIONTYPE=overlay
 fi
