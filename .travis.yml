@@ -5,10 +5,10 @@ language: c
 before_install:
   # Remove some packages that actively depend on locales working properly.
   - sudo apt-get --quiet=2 remove postgresql-9.1 postgresql-contrib-9.1 postgresql-9.2 postgresql-contrib-9.2 postgresql-9.3 postgresql-contrib-9.3 postgresql-9.4 postgresql-contrib-9.4 >/dev/null
-  # Upgrade to Trusty at least.
+  # We need at least Vivid for python3-stdeb
   - sudo rm -f /etc/apt/sources.list
-  - echo 'deb http://us.archive.ubuntu.com/ubuntu/ trusty main universe' | sudo dd of=/etc/apt/sources.list
-  - echo 'deb http://us.archive.ubuntu.com/ubuntu/ trusty-updates main universe' | sudo dd of=/etc/apt/sources.list conv=notrunc oflag=append
+  - echo 'deb http://us.archive.ubuntu.com/ubuntu/ vivid main universe' | sudo dd of=/etc/apt/sources.list
+  - echo 'deb http://us.archive.ubuntu.com/ubuntu/ vivid-updates main universe' | sudo dd of=/etc/apt/sources.list conv=notrunc oflag=append
   # Tell dpkg it is OK to choose the new config files, without prompting.
   - echo 'Dpkg::Options { "--force-confdef"; "--force-confnew"; }' | sudo dd of=/etc/apt/apt.conf.d/99conf
   - sudo apt-get --quiet=2 update
