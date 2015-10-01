@@ -8,6 +8,7 @@ before_install:
   # Upgrade to Trusty at least.
   - sudo rm -f /etc/apt/sources.list
   - echo 'deb http://us.archive.ubuntu.com/ubuntu/ trusty main universe' | sudo dd of=/etc/apt/sources.list
+  - echo 'deb http://us.archive.ubuntu.com/ubuntu/ trusty-updates main universe' | sudo dd of=/etc/apt/sources.list conv=notrunc oflag=append
   # Tell dpkg it is OK to choose the new config files, without prompting.
   - echo 'Dpkg::Options { "--force-confdef"; "--force-confnew"; }' | sudo dd of=/etc/apt/apt.conf.d/99conf
   - sudo apt-get --quiet=2 update
