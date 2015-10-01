@@ -14,7 +14,7 @@ INCLUDES=eatmydata,gdebi-core,software-properties-common,python3.5
 # vendor rather than the chroot vendor.
 if [ `lsb_release -is` = "Ubuntu" ]
 then
-    UNIONTYPE=overlayfs
+    UNIONTYPE=overlay
 else
     UNIONTYPE=overlay
 fi
