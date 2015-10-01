@@ -5,8 +5,6 @@ language: c
 before_install:
   # Remove some packages that actively depend on locales working properly.
   - sudo apt-get --quiet=2 remove postgresql-9.1 postgresql-contrib-9.1 postgresql-9.2 postgresql-contrib-9.2 postgresql-9.3 postgresql-contrib-9.3 postgresql-9.4 postgresql-contrib-9.4 >/dev/null
-  # Remove some other problematic packages.
-  - sudo apt-get --quiet=2 remove libhashkit2
   # We need at least Vivid for python3-stdeb
   - sudo rm -f /etc/apt/sources.list
   - echo 'deb http://us.archive.ubuntu.com/ubuntu/ vivid main universe' | sudo dd of=/etc/apt/sources.list
