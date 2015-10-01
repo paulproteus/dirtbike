@@ -28,7 +28,7 @@ before_install:
   - sudo /usr/sbin/locale-gen
   - sudo apt-get install python-six
   # Install some additional dependencies.
-  - sudo apt-get install debootstrap dpkg-dev lsb-release python python-stdeb python-wheel python3 python3-stdeb python3-wheel schroot tox
+  - sudo apt-get install debootstrap dpkg-dev lsb-release python python-stdeb python-wheel python3 python3-stdeb python3-wheel schroot overlayroot tox
 before_script:
   # We're on a trans-graded Ubuntu box so force Debian unstable.
   - export CH_VENDOR=Debian CH_DISTRO=unstable CH_GROUPS="$(id -gn),root"
