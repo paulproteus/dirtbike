@@ -12,16 +12,8 @@ before_install:
   - sudo apt-get --quiet=2 remove postgresql-9.1 postgresql-contrib-9.1 postgresql-9.2 postgresql-contrib-9.2 postgresql-9.3 postgresql-contrib-9.3 postgresql-9.4 postgresql-contrib-9.4 >/dev/null
   # Tell dpkg it is OK to choose the new config files, without prompting.
   - echo 'Dpkg::Options { "--force-confdef"; "--force-confnew"; }' | sudo dd of=/etc/apt/apt.conf.d/99conf
-  # Trans-grade to Debian.
-  #- sudo rm /etc/apt/sources.list
-  #- echo 'deb http://mirror.mit.edu/debian/ unstable main' | sudo dd of=/etc/apt/sources.list
-  #- sudo apt-get --quiet=2 update
-  #- sudo apt-get --quiet=2 --force-yes -y install debian-archive-keyring >/dev/null
-  #- sudo apt-get --quiet=2 update
-  #- sudo rm -f /etc/dpkg/dpkg.cfg.d/multiarch  # Remove historic multi-arch config.
-  #- echo -n | sudo dd of=/var/lib/dpkg/info/libc-bin.list  # Pretend nothing conflicts with this package's files.
-  #- sudo dpkg -r --force-depends --force-remove-essential locales libc6-dev
-  #- sudo apt-get --quiet=2 update
+  - sudo apt-get --quiet=2 update
+  - sudo apt-get --quiet=2 upgrade
   - sudo apt-get --quiet=2 --fix-broken install
   # Make sure locales are in a healthy shape.
   - echo 'en_US.UTF-8 UTF-8' | sudo dd of=/etc/locale.gen
@@ -30,13 +22,9 @@ before_install:
   # Install some additional dependencies.
   - sudo apt-get install debootstrap dpkg-dev lsb-release python python-stdeb python-wheel python3 python3-stdeb python3-wheel schroot tox
 before_script:
-  # We're on a trans-graded Ubuntu box so force Debian unstable.
   - export CH_GROUPS="$(id -gn),root"
   - sudo -E ./mkchroot.sh
 script:
-  #- export CH_DISTRO=unstable
   - tox
 after_script:
-  # We're on a trans-graded Ubuntu box so force Debian unstable.
-  #- export CH_DISTRO=unstable
   - sudo -E ./rmchroot.sh
