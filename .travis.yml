@@ -13,6 +13,8 @@ before_install:
   - echo 'Dpkg::Options { "--force-confdef"; "--force-confnew"; }' | sudo dd of=/etc/apt/apt.conf.d/99conf
   # Remove historic multi-arch config.
   - sudo rm -f /etc/dpkg/dpkg.cfg.d/multiarch
+  # Remove some problematic packages.
+  - sudo apt-get --quiet=2 remove libmemcached-dev
   - sudo apt-get --quiet=2 update
   - sudo apt-get --quiet=2 -y --force-yes dist-upgrade
   # Make sure locales are in a healthy shape.
