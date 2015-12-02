@@ -6,7 +6,7 @@ CH_DISTRO=${CH_DISTRO:-`lsb_release -cs`}
 CH_VENDOR=${CH_VENDOR:-`lsb_release -is`}
 CH_GROUPS=${CH_GROUPS:-"sbuild,root"}
 
-CHROOT=dirtbike-$DISTRO-$ARCH
+CHROOT=dirtbike-$CH_DISTRO-$CH_ARCH
 CHROOT_DIR=/var/lib/schroot/chroots/$CHROOT
 
 rm -rf $CHROOT_DIR

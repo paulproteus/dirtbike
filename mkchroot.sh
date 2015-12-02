@@ -8,7 +8,7 @@ CH_GROUPS=${CH_GROUPS:-"sbuild,root"}
 
 CHROOT=dirtbike-$CH_DISTRO-$CH_ARCH
 CHROOT_DIR=/var/lib/schroot/chroots/$CHROOT
-INCLUDES=eatmydata,gdebi-core,software-properties-common,python3.5
+INCLUDES=eatmydata,gdebi-core,software-properties-common,python3-all
 
 if [ "$CH_VENDOR" = "Ubuntu" ]
 then
