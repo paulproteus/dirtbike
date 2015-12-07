@@ -1,5 +1,4 @@
 import os
-import sys
 
 from dirtbike.testing.helpers import call, output
 
@@ -43,11 +42,6 @@ class Session:
         self.id = output(
             ['schroot', '-u', 'root', '-c', chroot_name, '--begin-session']
             ).strip()
-        # Install a few additional dependencies.
-        prefix = 'python3' if sys.version_info >= (3,) else 'python'
-        for dependency in ('setuptools', 'wheel'):
-            self.call('apt-get install -y --force-yes {}-{}'.format(
-                prefix, dependency))
 
     def end(self):
         assert self.id is not None, 'No session'

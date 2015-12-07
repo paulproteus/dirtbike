@@ -63,7 +63,8 @@ class TestDirtbike(unittest.TestCase):
         # into a wheel and verify the contents.
         self._start_session()
         python_cmd = 'python{}.{}'.format(*sys.version_info[:2])
-        self.session.call([python_cmd, 'setup.py', 'install'])
+        self.session.call([python_cmd, 'setup.py', 'install'],
+                          env=dict(LC_ALL='en_US.UTF-8'))
         # We need dirtbike to be installed in the schroot's system so
         # that it can find system packages.
         with chdir(self.example_dir):
@@ -96,7 +97,8 @@ class TestDirtbike(unittest.TestCase):
         # Use dirtbike in the schroot to turn the installed package back into a
         # whl.  To verify it, we'll purge the deb and run the package test with
         # the .whl in sys.path.
-        self.session.call('/usr/local/bin/dirtbike stupid')
+        self.session.call('/usr/local/bin/dirtbike stupid',
+                          env=dict(LC_ALL='en_US.UTF-8'))
         prefix = 'python3' if sys.version_info >= (3,) else 'python'
         self.session.call('apt-get purge -y {}-stupid'.format(prefix))
         # What's the name of the .whl file?
