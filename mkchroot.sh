@@ -53,4 +53,8 @@ schroot -u root -c source:$CHROOT -- apt-get update
 # Do these installs here because in Ubuntu, some of them come from universe.
 schroot -u root -c source:$CHROOT -- apt-get install --yes python-setuptools python-stdeb python-wheel python3-setuptools python3-stdeb python3-wheel
 
+# We need a UTF-8 locale because some of the packages that will get installed
+# have non-ASCII characters in their egg-info files.
+schroot -u root -c source:$CHROOT -- locale-gen en_US.UTF-8
+
 echo "schroot $CHROOT is ready"

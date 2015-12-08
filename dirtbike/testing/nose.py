@@ -8,14 +8,15 @@ __all__ = [
 import os
 import re
 import doctest
-import dirtbike
 
 from nose2.events import Plugin
+from pkg_resources import resource_filename
 
 
 DOT = '.'
 FLAGS = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE | doctest.REPORT_NDIFF
-TOPDIR = os.path.dirname(dirtbike.__file__)
+TOPDIR = os.path.abspath(
+    os.path.dirname(resource_filename('dirtbike', '__init__.py')))
 
 
 
