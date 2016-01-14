@@ -1,12 +1,13 @@
-dirtbike
-========
+==========
+ dirtbike
+==========
 
 .. image:: https://img.shields.io/travis/paulproteus/dirtbike.svg
    :target: https://travis-ci.org/paulproteus/dirtbike
 
 
 Purpose of the software
------------------------
+=======================
 
 This is a Python program that takes packages that are already
 installed on a system and converts them to wheels.
@@ -22,7 +23,7 @@ distribute pip as well as other Python packages.
 
 
 License
--------
+=======
 
 This software is available under the terms of the same license as
 `pya/pip`::
@@ -51,7 +52,7 @@ This software is available under the terms of the same license as
 
 
 Origin of the name
-------------------
+==================
 
 The name comes from a They Might Be Giants song::
 
@@ -64,3 +65,5 @@ The name comes from a They Might Be Giants song::
 
 The real motivation behind the name was to find a word or two that
 alludes to the idea of "wheel."
+
+"Boat of Car" might have been too confusing.
