@@ -55,8 +55,8 @@ def make_wheel_file(distribution_name):
         'version': strategy.version,
         })
 
-    # The wheel generator will clean up this file when it exits, but let's
-    # just be sure that any failures don't leave this directory.
+    # The wheel generator will clean up this directory when it exits, but
+    # let's just be sure that any failures don't leave this directory.
     bdist_dir = tempfile.mkdtemp()
     atexit.register(shutil.rmtree, bdist_dir, ignore_errors=True)
 
