@@ -55,18 +55,15 @@ def make_wheel_file(distribution_name):
         'version': strategy.version,
         })
 
+    # The wheel generator will clean up this file when it exits, but let's
+    # just be sure that any failures don't leave this directory.
+    bdist_dir = tempfile.mkdtemp()
+    atexit.register(shutil.rmtree, bdist_dir, ignore_errors=True)
+
     wheel_generator = wheel.bdist_wheel.bdist_wheel(
         dummy_dist_distribution_obj)
     wheel_generator.universal = True
-
-    # Copy files from the system into a place where wheel_generator will look.
-    #
-    # FIXME: Pull this out of wheel_generator.
-    BUILD_PREFIX = 'build/bdist.linux-x86_64/wheel/'
-
-    if os.path.exists(BUILD_PREFIX):
-        raise ValueError(
-            "Yikes, I am afraid of inconsistent state and will bail out.")
+    wheel_generator.bdist_dir = bdist_dir
 
     for filename in strategy.files:
         # The list of files sometimes contains the empty string. That's not
@@ -108,11 +105,9 @@ def make_wheel_file(distribution_name):
         if '__pycache__' in abspath or abspath.endswith('.pyc'):
             continue
 
-        # Since we actually do seem to want this file, let us copy it into the
-        # BUILD_PREFIX.
         _copy_file_making_dirs_as_needed(
             abspath,
-            os.path.abspath(BUILD_PREFIX + '/' + filename))
+            os.path.abspath(bdist_dir + '/' + filename))
 
     # Call finalize_options() to tell bdist_wheel we are done playing with
     # metadata.
