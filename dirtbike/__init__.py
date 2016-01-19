@@ -2,21 +2,26 @@ from __future__ import (
     absolute_import, division, print_function, unicode_literals,
 )
 
+import atexit
 import distutils.dist
 import errno
 import os
-import pkg_resources
 import shutil
-import subprocess
+import tempfile
 import wheel.bdist_wheel
 
-from .strategy import DpkgEggStrategy, WheelStrategy
+from .strategy import DpkgEggStrategy, DpkgImportStrategy, WheelStrategy
+
+STRATEGIES = (
+    WheelStrategy,
+    DpkgEggStrategy,
+    DpkgImportStrategy,
+    )
 
 
 def _mkdir_p(dirname):
     if not dirname:
         raise ValueError("I refuse to operate on false-y values.")
-
     try:
         os.makedirs(dirname)
     except OSError as e:
@@ -31,7 +36,7 @@ def _copy_file_making_dirs_as_needed(src, dst):
 
 def make_wheel_file(distribution_name):
     # Grab the metadata for the installed version of this distribution.
-    for strategy_class in (WheelStrategy, DpkgEggStrategy):
+    for strategy_class in STRATEGIES:
         strategy = strategy_class(distribution_name)
         if strategy.can_succeed:
             break
@@ -39,6 +44,8 @@ def make_wheel_file(distribution_name):
         raise RuntimeError(
             'No strategy for finding package contents: {}'.format(
                 distribution_name))
+
+    assert strategy.files is not None
 
     # Create a Distribution object so that the wheel.bdist_wheel machinery can
     # operate happily.  We copy any metadata we need out of the installed
@@ -50,6 +57,7 @@ def make_wheel_file(distribution_name):
 
     wheel_generator = wheel.bdist_wheel.bdist_wheel(
         dummy_dist_distribution_obj)
+    wheel_generator.universal = True
 
     # Copy files from the system into a place where wheel_generator will look.
     #
@@ -59,9 +67,6 @@ def make_wheel_file(distribution_name):
     if os.path.exists(BUILD_PREFIX):
         raise ValueError(
             "Yikes, I am afraid of inconsistent state and will bail out.")
-
-    if strategy.files is None:
-        raise RuntimeError('Strategy lied: {}'.format(strategy_class.__name__))
 
     for filename in strategy.files:
         # The list of files sometimes contains the empty string. That's not
@@ -115,8 +120,3 @@ def make_wheel_file(distribution_name):
 
     wheel_generator.run()  # OMG Rofl?
     return wheel_generator
-
-
-def main():
-    import sys
-    make_wheel_file(sys.argv[1])

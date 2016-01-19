@@ -16,7 +16,7 @@ setup(name='dirtbike',
       ],
       entry_points={
           'console_scripts': [
-              'dirtbike = dirtbike:main',
+              'dirtbike = dirtbike.__main__:main',
           ],
       },
 )

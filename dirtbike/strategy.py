@@ -3,9 +3,52 @@ from __future__ import (
     )
 
 
+import os
 import errno
+import importlib
 import subprocess
 import pkg_resources
+
+
+def _abspathify(filenames, location):
+    paths = []
+    for filename in filenames:
+        # The list of files sometimes contains the empty string. That's not
+        # much of a file, so we don't bother adding it to the archive.
+        if len(filename) == 0:
+            continue
+        # NOTE: If a file is not in the "location" that the installed package
+        # supposedly lives in, we skip it.  This means we are likely to skip
+        # console scripts.
+        if filename.startswith('/'):
+            abspath = os.path.abspath(filename)
+        else:
+            abspath = os.path.abspath(os.path.join(location, filename))
+
+        found = False
+        is_file = False
+        if abspath.startswith(location) and os.path.exists(abspath):
+            found = True
+            is_file = os.path.isfile(abspath)
+        # Print a warning in the case that some file is missing, then skip it.
+        if not found:
+            print('Skipping', abspath,
+                  'because we could not find it in the metadata location.')
+            continue
+        # Skip directories.
+        if found and not is_file:
+            continue
+
+        # Skip the dist-info directory, since bdist_wheel will
+        # recreate it for us.
+        if '.dist-info' in abspath:
+            continue
+
+        # Skip any *.pyc files or files that are in a __pycache__ directory.
+        if '__pycache__' in abspath or abspath.endswith('.pyc'):
+            continue
+        paths.append(abspath)
+    return paths
 
 
 class Strategy(object):
@@ -48,22 +91,28 @@ class WheelStrategy(Strategy):
 
     def __init__(self, name):
         super(WheelStrategy, self).__init__(name)
-        self._metadata = pkg_resources.get_distribution(self._name)
         self._files = None
+        try:
+            self._metadata = pkg_resources.get_distribution(self._name)
+        except pkg_resources.DistributionNotFound:
+            return
         try:
             # If we're lucky, the information for what files are installed on
             # the system are available in RECORD, aka wheel metadata.
-            self.files = self._metadata.get_metadata('RECORD').splitlines()
+            files = self._metadata.get_metadata('RECORD').splitlines()
         # Python 3 - use FileNotFoundError
         except IOError as error:
+            self._files = None
             # Let's find the path to an egg-info file and ask dpkg for the
             # file metadata.
-            if error.errno != errno.ENOENT:
-                raise
+            if error.errno == errno.ENOENT:
+                return
+            raise
+        self._files = _abspathify(files, self._metadata.location)
 
     @property
     def can_succeed(self):
-        return self.files is not None
+        return self._files is not None
 
     @property
     def version(self):
@@ -76,6 +125,10 @@ class WheelStrategy(Strategy):
     @property
     def name(self):
         return self._metadata.project_name
+
+    @property
+    def location(self):
+        return self._metadata.location
 
 
 class DpkgEggStrategy(Strategy):
@@ -91,7 +144,11 @@ class DpkgEggStrategy(Strategy):
     # removed would presumably have a bumped "major" version number.
     def __init__(self, name):
         super(DpkgEggStrategy, self).__init__(name)
-        self._metadata = pkg_resources.get_distribution(name)
+        try:
+            self._metadata = pkg_resources.get_distribution(name)
+        except pkg_resources.DistributionNotFound:
+            self._metadata = None
+            return
         # Find the .egg-info directory, and then search the dpkg database for
         # which package provides it.
         path_to_egg_info = self._metadata._provider.egg_info
@@ -133,3 +190,48 @@ class DpkgEggStrategy(Strategy):
     @property
     def location(self):
         return self._metadata.location
+
+
+class DpkgImportStrategy(Strategy):
+    """Use dpkg based on Python importlib."""
+
+    def __init__(self, name):
+        super(DpkgImportStrategy, self).__init__(name)
+        self._spec = None
+        spec = importlib.util.find_spec(name)
+        if spec is None or not spec.has_location:
+            return
+        # I'm not sure what to do if this is a namespace package, so punt.
+        if len(spec.submodule_search_locations) != 1:
+            return
+        self._spec = spec
+        location = self._location = spec.submodule_search_locations[0]
+        stdout = subprocess.check_output(
+            ['/usr/bin/dpkg', '-S', self._spec.origin],
+            universal_newlines=True)
+        pkg_name, colon, path = stdout.partition(':')
+        stdout = subprocess.check_output(
+            ['/usr/bin/dpkg', '-L', pkg_name],
+            universal_newlines=True)
+        # Now we have all the files from the Debian package.  However,
+        # RECORD-style files lists are all relative to the site-packages
+        # directory in which the package was installed.
+        self._files = []
+        for filename in stdout.splitlines():
+            if filename.startswith(location):
+                shortened_filename = filename[len(location):]
+                if shortened_filename.startswith('/'):
+                    shortened_filename = shortened_filename[1:]
+                self._files.append(shortened_filename)
+
+    @property
+    def can_succeed(self):
+        return self._spec is not None
+
+    @property
+    def location(self):
+        return self._location
+
+    @property
+    def files(self):
+        return self._files
