@@ -1,2 +1,4 @@
 dirtbike.egg-info
 build
+/.coverage
+htmlcov

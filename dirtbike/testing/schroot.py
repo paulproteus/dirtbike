@@ -34,9 +34,9 @@ class Session:
         # overridden.  If not, figure out some defaults.
         arch = os.environ.get('CH_ARCH')
         distro = os.environ.get('CH_DISTRO')
-        if arch is None:
+        if arch is None:                            # pragma: no branch
             arch = output('dpkg-architecture -q DEB_HOST_ARCH').strip()
-        if distro is None:
+        if distro is None:                          # pragma: no branch
             distro = output('lsb_release -cs').strip()
         chroot_name = 'dirtbike-{}-{}'.format(distro, arch)
         self.id = output(

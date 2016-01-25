@@ -29,7 +29,7 @@ class NosePlugin(Plugin):
         self.addArgument(self.patterns, 'P', 'pattern',
                          'Add a test matching pattern')
 
-    def getTestCaseNames(self, event):
+    def getTestCaseNames(self, event):              # pragma: no cover
         if len(self.patterns) == 0:
             # No filter patterns, so everything should be tested.
             return
@@ -52,7 +52,7 @@ class NosePlugin(Plugin):
             else:
                 event.excludedNames.append(name)
 
-    def handleFile(self, event):
+    def handleFile(self, event):                    # pragma: no cover
         path = event.path[len(TOPDIR)+1:]
         if len(self.patterns) > 0:
             for pattern in self.patterns:

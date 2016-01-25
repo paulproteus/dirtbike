@@ -17,7 +17,7 @@ from contextlib import contextmanager
 
 
 DEVNULL = None
-if DEVNULL is None and not os.getenv('DIRTBIKE_DEBUG'):
+if DEVNULL is None and not os.getenv('DIRTBIKE_DEBUG'):   # pragma: no cover
     try:
         DEVNULL = subprocess.DEVNULL
     except AttributeError:
@@ -29,7 +29,7 @@ if DEVNULL is None and not os.getenv('DIRTBIKE_DEBUG'):
 
 
 def call(command, **kws):
-    if isinstance(command, str):
+    if isinstance(command, str):                    # pragma: no cover
         command = command.split()
     subprocess.check_call(command, stdout=DEVNULL, stderr=DEVNULL, **kws)
 
@@ -52,7 +52,7 @@ def chdir(newdir):
 
 try:
     temporary_directory = tempfile.TemporaryDirectory
-except AttributeError:
+except AttributeError:   # pragma: no cover
     # Python 2.7 doesn't have tempfile.TemporaryDirectory
     class temporary_directory(object):
         def __init__(self):
