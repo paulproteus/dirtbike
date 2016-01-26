@@ -1,4 +1,7 @@
 include *.py MANIFEST.in *.ini
 global-include *.txt *.rst
-exclude .bzrignore
+exclude .gitignore
 prune build
+prune dirtbike/tests/example/stupid
+prune .tox
+prune dist
