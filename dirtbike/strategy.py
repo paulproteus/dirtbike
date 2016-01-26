@@ -4,6 +4,7 @@ from __future__ import (
 
 
 import os
+import imp
 import errno
 import importlib
 import subprocess
@@ -192,20 +193,28 @@ class DpkgEggStrategy(Strategy):
         return self._metadata.location
 
 
-class DpkgImportStrategy(Strategy):
-    """Use dpkg based on Python importlib."""
+class DpkgImportlibStrategy(Strategy):
+    """Use dpkg based on Python 3's importlib."""
 
     def __init__(self, name):
-        super(DpkgImportStrategy, self).__init__(name)
-        self._spec = None
-        spec = importlib.util.find_spec(name)
+        super(DpkgImportlibStrategy, self).__init__(name)
+        spec = self._spec = None
+        try:
+            spec = importlib.util.find_spec(name)
+        except AttributeError:
+            # Must be Python 2.
+            pass
         if spec is None or not spec.has_location:
             return
         # I'm not sure what to do if this is a namespace package, so punt.
         if len(spec.submodule_search_locations) != 1:
             return
         self._spec = spec
-        location = self._location = spec.submodule_search_locations[0]
+        location = spec.submodule_search_locations[0]
+        # The location will be the package directory, but we need it's parent
+        # so that imports will work.  This will very likely be
+        # /usr/lib/python3/dist-packages
+        location = self._location = os.path.dirname(location)
         stdout = subprocess.check_output(
             ['/usr/bin/dpkg', '-S', self._spec.origin],
             universal_newlines=True)
@@ -227,6 +236,53 @@ class DpkgImportStrategy(Strategy):
     @property
     def can_succeed(self):
         return self._spec is not None
+
+    @property
+    def location(self):
+        return self._location
+
+    @property
+    def files(self):
+        return self._files
+
+
+class DpkgImpStrategy(Strategy):
+    """Use dpkg based on Python 2's imp API."""
+
+    def __init__(self, name):
+        super(DpkgImpStrategy, self).__init__(name)
+        self._location = None
+        try:
+            filename, pathname, description, = imp.find_module(name)
+        except ImportError:
+            return
+        if pathname is None:
+            return
+        # The location will be the package directory, but we need it's parent
+        # so that imports will work.  This will very likely be
+        # /usr/lib/python2.7/dist-packages
+        location = self._location = os.path.dirname(pathname)
+        stdout = subprocess.check_output(
+            ['/usr/bin/dpkg', '-S', pathname],
+            universal_newlines=True)
+        pkg_name, colon, path = stdout.partition(':')
+        stdout = subprocess.check_output(
+            ['/usr/bin/dpkg', '-L', pkg_name],
+            universal_newlines=True)
+        # Now we have all the files from the Debian package.  However,
+        # RECORD-style files lists are all relative to the site-packages
+        # directory in which the package was installed.
+        self._files = []
+        for filename in stdout.splitlines():
+            if filename.startswith(location):
+                shortened_filename = filename[len(location):]
+                if shortened_filename.startswith('/'):
+                    shortened_filename = shortened_filename[1:]
+                self._files.append(shortened_filename)
+
+    @property
+    def can_succeed(self):
+        return self._location is not None
 
     @property
     def location(self):

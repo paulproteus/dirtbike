@@ -110,3 +110,39 @@ class TestDirtbike(unittest.TestCase):
             [python_cmd, '-c', 'import stupid; stupid.yes()'],
             env=dict(PYTHONPATH=wheel))
         self.assertEqual(result, 'yes\n')
+
+    def test_no_egg_to_whl(self):
+        # Create a .deb for a package which doesn't have an .egg-info
+        # directory.  An example of this in Debian is pkg_resources which
+        # upstream is part of setuptools, but is split in Debian.
+        self._start_session()
+        self.session.call(['apt-get', 'install', 'python3-pkg-resources'])
+        # Install dirtbike.
+        python_cmd = 'python{}.{}'.format(*sys.version_info[:2])
+        self.session.call([python_cmd, 'setup.py', 'install'],
+                          env=dict(LC_ALL='en_US.UTF-8'))
+        # Use dirtbike in the chroot to turn pkg_resources back into a whl.
+        # To verify that, we'll purge the deb and try to import the package
+        # with the .whl in sys.path.
+        self.session.call('/usr/local/bin/dirtbike pkg_resources',
+                          env=dict(LC_ALL='en_US.UTF-8'))
+        self.session.call('apt-get purge -y python3-pkg-resources')
+        # What's the name of the .whl file?
+        result = self.session.output('find dist -name *.whl')
+        wheels = [entry.strip() for entry in result.splitlines()]
+        self.assertEqual(len(wheels), 1, wheels)
+        wheel = wheels[0]
+        result = self.session.output(
+            # Call Python w/o invoking system site.py or the user's site
+            # directory, both of which can cause failures in Python 2.
+            [python_cmd, '-Ssc',
+             'import pkg_resources; print(pkg_resources.__file__)'],
+            env=dict(PYTHONPATH=wheel))
+        # In Python 2, the __file__ is a relative directory.
+        package_path = os.path.abspath(result.strip())
+        wheel_path = os.path.join(
+            os.path.abspath('dist'),
+            os.path.basename(wheel),
+            'pkg_resources',
+            '__init__.py')
+        self.assertEqual(package_path, wheel_path)

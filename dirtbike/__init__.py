@@ -10,12 +10,15 @@ import shutil
 import tempfile
 import wheel.bdist_wheel
 
-from .strategy import DpkgEggStrategy, DpkgImportStrategy, WheelStrategy
+from .strategy import (
+    DpkgEggStrategy, DpkgImpStrategy, DpkgImportlibStrategy, WheelStrategy)
+
 
 STRATEGIES = (
     WheelStrategy,
     DpkgEggStrategy,
-    DpkgImportStrategy,
+    DpkgImportlibStrategy,
+    DpkgImpStrategy,
     )
 
 
