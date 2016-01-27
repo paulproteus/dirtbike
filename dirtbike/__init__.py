@@ -2,14 +2,15 @@ from __future__ import (
     absolute_import, division, print_function, unicode_literals,
 )
 
-import atexit
-import distutils.dist
-import errno
 import os
+import errno
+import atexit
 import shutil
 import tempfile
+import distutils.dist
 import wheel.bdist_wheel
 
+from glob import glob
 from .strategy import (
     DpkgEggStrategy, DpkgImpStrategy, DpkgImportlibStrategy, WheelStrategy)
 
@@ -22,6 +23,7 @@ STRATEGIES = (
     )
 
 
+# os.makedirs(, exist_ok=True) doesn't exist in Python 2.
 def _mkdir_p(dirname):
     if not dirname:
         raise ValueError("I refuse to operate on false-y values.")
@@ -37,7 +39,8 @@ def _copy_file_making_dirs_as_needed(src, dst):
     shutil.copy(src, dst)
 
 
-def make_wheel_file(distribution_name):
+def make_wheel_file(args):
+    distribution_name = args.package
     # Grab the metadata for the installed version of this distribution.
     for strategy_class in STRATEGIES:
         strategy = strategy_class(distribution_name)
@@ -62,11 +65,14 @@ def make_wheel_file(distribution_name):
     # let's just be sure that any failures don't leave this directory.
     bdist_dir = tempfile.mkdtemp()
     atexit.register(shutil.rmtree, bdist_dir, ignore_errors=True)
+    dist_dir = tempfile.mkdtemp()
+    atexit.register(shutil.rmtree, dist_dir, ignore_errors=True)
 
     wheel_generator = wheel.bdist_wheel.bdist_wheel(
         dummy_dist_distribution_obj)
     wheel_generator.universal = True
     wheel_generator.bdist_dir = bdist_dir
+    wheel_generator.dist_dir = dist_dir
 
     for filename in strategy.files:
         # The list of files sometimes contains the empty string. That's not
@@ -115,6 +121,15 @@ def make_wheel_file(distribution_name):
     # Call finalize_options() to tell bdist_wheel we are done playing with
     # metadata.
     wheel_generator.finalize_options()
-
     wheel_generator.run()  # OMG Rofl?
-    return wheel_generator
+
+    # Move the resulting .whl to its final destination.
+    files = glob(os.path.join(dist_dir, '{}*.whl'.format(distribution_name)))
+    assert len(files) == 1, files
+
+    destination = (
+        os.getcwd()
+        if args.directory is None
+        else args.directory)
+    _mkdir_p(destination)
+    shutil.move(files[0], destination)
