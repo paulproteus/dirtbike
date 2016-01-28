@@ -5,6 +5,7 @@ from __future__ import (
 
 import os
 import imp
+import sys
 import errno
 import importlib
 import subprocess
@@ -147,6 +148,8 @@ class _DpkgBaseStrategy(object):
         for filename in stdout.splitlines():
             if filename.startswith(relative_to):
                 shortened_filename = filename[len(relative_to):]
+                if len(shortened_filename) == 0:
+                    continue
                 if shortened_filename.startswith('/'):
                     shortened_filename = shortened_filename[1:]
                 yield shortened_filename
@@ -211,7 +214,8 @@ class DpkgImportlibStrategy(Strategy, _DpkgBaseStrategy):
         if spec is None or not spec.has_location:
             return
         # I'm not sure what to do if this is a namespace package, so punt.
-        if len(spec.submodule_search_locations) != 1:
+        if (    spec.submodule_search_locations is None
+                or len(spec.submodule_search_locations) != 1):
             return
         self._spec = spec
         location = spec.submodule_search_locations[0]
@@ -241,16 +245,56 @@ class DpkgImpStrategy(Strategy, _DpkgBaseStrategy):
         super(DpkgImpStrategy, self).__init__(name)
         self._location = None
         try:
-            filename, pathname, description, = imp.find_module(name)
+            filename, pathname, description = imp.find_module(name)
         except ImportError:
             return
         if pathname is None:
+            return
+        # Don't allow a stdlib package to sneak in.
+        path_components = pathname.split(os.sep)
+        if (    'site-packages' not in path_components
+                and 'dist-packages' not in path_components):
             return
         # The location will be the package directory, but we need it's parent
         # so that imports will work.  This will very likely be
         # /usr/lib/python2.7/dist-packages
         location = self._location = os.path.dirname(pathname)
         self._files = list(self._find_files(pathname, location))
+
+    @property
+    def can_succeed(self):
+        return self._location is not None
+
+    @property
+    def location(self):
+        return self._location
+
+    @property
+    def files(self):
+        return self._files
+
+
+class DpkgImportCalloutStrategy(Strategy, _DpkgBaseStrategy):
+    """ Use dpkg, but find the file by shelling out to some other Python."""
+
+    def __init__(self, name):
+        super(DpkgImportCalloutStrategy, self).__init__(name)
+        self._location = None
+        other_python = '/usr/bin/python{}'.format(
+            2 if sys.version_info.major == 3 else 3)
+        try:
+            stdout = subprocess.check_output(
+                [other_python, '-c',
+                 'import {0}; print({0}.__file__)'.format(name)],
+                universal_newlines=True)
+        except subprocess.CalledProcessError:
+            return
+        filename = stdout.splitlines()[0]
+        # In Python 2, this will end with .pyc but that's not owned by any
+        # package.  So ensure the path ends in .py always.
+        root, ext = os.path.splitext(filename)
+        self._location = os.path.dirname(filename)
+        self._files = list(self._find_files(root + '.py', self._location))
 
     @property
     def can_succeed(self):

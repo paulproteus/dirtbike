@@ -12,14 +12,17 @@ import wheel.bdist_wheel
 
 from glob import glob
 from .strategy import (
-    DpkgEggStrategy, DpkgImpStrategy, DpkgImportlibStrategy, WheelStrategy)
+    DpkgEggStrategy, DpkgImpStrategy, DpkgImportCalloutStrategy,
+    DpkgImportlibStrategy, WheelStrategy)
 
 
 STRATEGIES = (
+    # The order is significant here, so DO NOT sort alphabetically.
     WheelStrategy,
     DpkgEggStrategy,
     DpkgImportlibStrategy,
     DpkgImpStrategy,
+    DpkgImportCalloutStrategy,
     )
 
 
