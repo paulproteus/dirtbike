@@ -198,9 +198,74 @@ class TestDirtbike(unittest.TestCase):
             env=dict(LC_ALL='en_US.UTF-8'))
         prefix = 'python3' if sys.version_info >= (3,) else 'python'
         self.session.call('apt-get purge -y {}-stupid'.format(prefix))
+        result = self.session.output('find {} -name *.whl'.format(destination))
+        wheels = [entry.strip() for entry in result.splitlines()]
+        self.assertEqual(len(wheels), 1, wheels)
+        wheel = wheels[0]
         result = self.session.output(
             [python_cmd, '-c', 'import stupid; stupid.yes()'],
-            env=dict(PYTHONPATH=os.path.join(
-                destination,
-                'stupid-2.0-py2.py3-none-any.whl')))
+            env=dict(PYTHONPATH=wheel))
         self.assertEqual(result, 'yes\n')
+
+    @unittest.skipIf(sys.version_info.major == 2, 'Python 3 only test')
+    def test_stdlib_python3(self):
+        # Install a package that exists in the stdlib of Python 3 but must be
+        # apt-get installed in Python 2.  dirtbike can call out to the other
+        # Python to find the package.
+        self._start_session()
+        python_cmd = 'python{}.{}'.format(*sys.version_info[:2])
+        self.session.call([python_cmd, 'setup.py', 'install'],
+                          env=dict(LC_ALL='en_US.UTF-8'))
+        # Install a package known not to exist in this version of Python.
+        # This must be a pure-Python package that can be made universal.
+        self.session.call('apt-get install -y python-ipaddress')
+        self.session.call('/usr/local/bin/dirtbike ipaddress',
+                          env=dict(LC_ALL='en_US.UTF-8'))
+        # Remove the OS package and try to invoke this with the wheel.
+        self.session.call('apt-get purge -y python-ipaddress')
+        result = self.session.output('find . -maxdepth 1 -name *.whl')
+        wheels = [entry.strip() for entry in result.splitlines()]
+        self.assertEqual(len(wheels), 1, wheels)
+        wheel = wheels[0]
+        # Try to import the package with the version of Python foreign to the
+        # one that created the wheel.
+        result = self.session.output(
+            ['python3', '-Ssc',
+             'import ipaddress; print(ipaddress.__file__)'],
+            env=dict(PYTHONPATH=wheel)).strip()
+        # Python 2.7 and Python 3.4+ differ.
+        assertRegex = getattr(self, 'assertRegex',
+                              getattr(self, 'assertRegexpMatches'))
+        assertRegex(result, r'\./ipaddress-.*\.whl/ipaddress.py')
+
+    def test_other_python(self):
+        # Install a package that will only exist in one version of Python
+        # (e.g. Python 2-only).  dirtbike can call out to the other Python to
+        # find the package.  This must be a pure-Python package that can be
+        # made universal.
+        package = 'python{}-six'.format(
+            '' if sys.version_info.major == 3 else '3')
+        self._start_session()
+        # Start fresh.
+        self.session.call('apt-get purge -y python-six python3-six')
+        python_cmd = 'python{}.{}'.format(*sys.version_info[:2])
+        self.session.call([python_cmd, 'setup.py', 'install'],
+                          env=dict(LC_ALL='en_US.UTF-8'))
+        self.session.call('apt-get install -y {}'.format(package))
+        self.session.call('/usr/local/bin/dirtbike six',
+                          env=dict(LC_ALL='en_US.UTF-8'))
+        # Remove the OS package and try to invoke this with the wheel.
+        self.session.call('apt-get purge -y {}'.format(package))
+        result = self.session.output('find . -maxdepth 1 -name *.whl')
+        wheels = [entry.strip() for entry in result.splitlines()]
+        self.assertEqual(len(wheels), 1, wheels)
+        wheel = wheels[0]
+        # Try to import the package with the version of Python foreign to the
+        # one that created the wheel.
+        result = self.session.output(
+            [python_cmd, '-Ssc', 'import six; print(six.__file__)'],
+            env=dict(PYTHONPATH=wheel)).strip()
+        # Python 2.7 and Python 3.4+ differ.
+        assertRegex = getattr(self, 'assertRegex',
+                              getattr(self, 'assertRegexpMatches'))
+        assertRegex(result, r'\./six-.*\.whl/six.py')

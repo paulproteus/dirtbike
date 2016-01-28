@@ -5,6 +5,7 @@ from __future__ import (
 
 import os
 import imp
+import sys
 import errno
 import importlib
 import subprocess
@@ -132,7 +133,29 @@ class WheelStrategy(Strategy):
         return self._metadata.location
 
 
-class DpkgEggStrategy(Strategy):
+class _DpkgBaseStrategy(object):
+    def _find_files(self, path_to_some_file, relative_to):
+        stdout = subprocess.check_output(
+            ['/usr/bin/dpkg', '-S', path_to_some_file],
+            universal_newlines=True)
+        pkg_name, colon, path = stdout.partition(':')
+        stdout = subprocess.check_output(
+            ['/usr/bin/dpkg', '-L', pkg_name],
+            universal_newlines=True)
+        # Now we have all the files from the Debian package.  However,
+        # RECORD-style files lists are all relative to the site-packages
+        # directory in which the package was installed.
+        for filename in stdout.splitlines():
+            if filename.startswith(relative_to):
+                shortened_filename = filename[len(relative_to):]
+                if len(shortened_filename) == 0:
+                    continue
+                if shortened_filename.startswith('/'):
+                    shortened_filename = shortened_filename[1:]
+                yield shortened_filename
+
+
+class DpkgEggStrategy(Strategy, _DpkgBaseStrategy):
     """Use Debian-specific strategy for finding a package's contents."""
 
     # It would be nice to be able to remove the Debian-specific code so that
@@ -153,24 +176,8 @@ class DpkgEggStrategy(Strategy):
         # Find the .egg-info directory, and then search the dpkg database for
         # which package provides it.
         path_to_egg_info = self._metadata._provider.egg_info
-        stdout = subprocess.check_output(
-            ['/usr/bin/dpkg', '-S', path_to_egg_info],
-            universal_newlines=True)
-        pkg_name, colon, path = stdout.partition(':')
-        stdout = subprocess.check_output(
-            ['/usr/bin/dpkg', '-L', pkg_name],
-            universal_newlines=True)
-        # Now we have all the files from the Debian package.  However,
-        # RECORD-style files lists are all relative to the site-packages
-        # directory in which the package was installed.
-        self._files = []
-        base_location = self._metadata.location
-        for filename in stdout.splitlines():
-            if filename.startswith(self._metadata.location):
-                shortened_filename = filename[len(base_location):]
-                if shortened_filename.startswith('/'):
-                    shortened_filename = shortened_filename[1:]
-                self._files.append(shortened_filename)
+        self._files = list(self._find_files(path_to_egg_info,
+                                            self._metadata.location))
 
     @property
     def name(self):
@@ -193,7 +200,7 @@ class DpkgEggStrategy(Strategy):
         return self._metadata.location
 
 
-class DpkgImportlibStrategy(Strategy):
+class DpkgImportlibStrategy(Strategy, _DpkgBaseStrategy):
     """Use dpkg based on Python 3's importlib."""
 
     def __init__(self, name):
@@ -207,31 +214,16 @@ class DpkgImportlibStrategy(Strategy):
         if spec is None or not spec.has_location:
             return
         # I'm not sure what to do if this is a namespace package, so punt.
-        if len(spec.submodule_search_locations) != 1:
+        if (    spec.submodule_search_locations is None
+                or len(spec.submodule_search_locations) != 1):
             return
         self._spec = spec
         location = spec.submodule_search_locations[0]
-        # The location will be the package directory, but we need it's parent
+        # The location will be the package directory, but we need its parent
         # so that imports will work.  This will very likely be
         # /usr/lib/python3/dist-packages
         location = self._location = os.path.dirname(location)
-        stdout = subprocess.check_output(
-            ['/usr/bin/dpkg', '-S', self._spec.origin],
-            universal_newlines=True)
-        pkg_name, colon, path = stdout.partition(':')
-        stdout = subprocess.check_output(
-            ['/usr/bin/dpkg', '-L', pkg_name],
-            universal_newlines=True)
-        # Now we have all the files from the Debian package.  However,
-        # RECORD-style files lists are all relative to the site-packages
-        # directory in which the package was installed.
-        self._files = []
-        for filename in stdout.splitlines():
-            if filename.startswith(location):
-                shortened_filename = filename[len(location):]
-                if shortened_filename.startswith('/'):
-                    shortened_filename = shortened_filename[1:]
-                self._files.append(shortened_filename)
+        self._files = list(self._find_files(self._spec.origin, location))
 
     @property
     def can_succeed(self):
@@ -246,39 +238,63 @@ class DpkgImportlibStrategy(Strategy):
         return self._files
 
 
-class DpkgImpStrategy(Strategy):
+class DpkgImpStrategy(Strategy, _DpkgBaseStrategy):
     """Use dpkg based on Python 2's imp API."""
 
     def __init__(self, name):
         super(DpkgImpStrategy, self).__init__(name)
         self._location = None
         try:
-            filename, pathname, description, = imp.find_module(name)
+            filename, pathname, description = imp.find_module(name)
         except ImportError:
             return
         if pathname is None:
+            return
+        # Don't allow a stdlib package to sneak in.
+        path_components = pathname.split(os.sep)
+        if (    'site-packages' not in path_components
+                and 'dist-packages' not in path_components):
             return
         # The location will be the package directory, but we need it's parent
         # so that imports will work.  This will very likely be
         # /usr/lib/python2.7/dist-packages
         location = self._location = os.path.dirname(pathname)
-        stdout = subprocess.check_output(
-            ['/usr/bin/dpkg', '-S', pathname],
-            universal_newlines=True)
-        pkg_name, colon, path = stdout.partition(':')
-        stdout = subprocess.check_output(
-            ['/usr/bin/dpkg', '-L', pkg_name],
-            universal_newlines=True)
-        # Now we have all the files from the Debian package.  However,
-        # RECORD-style files lists are all relative to the site-packages
-        # directory in which the package was installed.
-        self._files = []
-        for filename in stdout.splitlines():
-            if filename.startswith(location):
-                shortened_filename = filename[len(location):]
-                if shortened_filename.startswith('/'):
-                    shortened_filename = shortened_filename[1:]
-                self._files.append(shortened_filename)
+        self._files = list(self._find_files(pathname, location))
+
+    @property
+    def can_succeed(self):
+        return self._location is not None
+
+    @property
+    def location(self):
+        return self._location
+
+    @property
+    def files(self):
+        return self._files
+
+
+class DpkgImportCalloutStrategy(Strategy, _DpkgBaseStrategy):
+    """ Use dpkg, but find the file by shelling out to some other Python."""
+
+    def __init__(self, name):
+        super(DpkgImportCalloutStrategy, self).__init__(name)
+        self._location = None
+        other_python = '/usr/bin/python{}'.format(
+            2 if sys.version_info.major == 3 else 3)
+        try:
+            stdout = subprocess.check_output(
+                [other_python, '-c',
+                 'import {0}; print({0}.__file__)'.format(name)],
+                universal_newlines=True)
+        except subprocess.CalledProcessError:
+            return
+        filename = stdout.splitlines()[0]
+        # In Python 2, this will end with .pyc but that's not owned by any
+        # package.  So ensure the path ends in .py always.
+        root, ext = os.path.splitext(filename)
+        self._location = os.path.dirname(filename)
+        self._files = list(self._find_files(root + '.py', self._location))
 
     @property
     def can_succeed(self):
