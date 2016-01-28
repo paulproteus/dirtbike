@@ -1,4 +1,4 @@
-include *.py MANIFEST.in *.ini
+include *.py MANIFEST.in *.ini *.cfg *.sh
 global-include *.txt *.rst
 exclude .gitignore
 prune build
