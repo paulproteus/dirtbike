@@ -152,8 +152,7 @@ class TestDirtbike(unittest.TestCase):
         self.assertEqual(package_path, wheel_path)
 
     def test_directory(self):
-        # Create a .deb, install it into a chroot, then turn it back
-        # into a wheel at a given directory and verify its contents.
+        # Test the -d option.
         self._start_session()
         python_cmd = 'python{}.{}'.format(*sys.version_info[:2])
         self.session.call([python_cmd, 'setup.py', 'install'],
@@ -196,6 +195,120 @@ class TestDirtbike(unittest.TestCase):
             ('/usr/local/bin/dirtbike', '-d',
              destination, 'stupid'),
             env=dict(LC_ALL='en_US.UTF-8'))
+        prefix = 'python3' if sys.version_info >= (3,) else 'python'
+        self.session.call('apt-get purge -y {}-stupid'.format(prefix))
+        result = self.session.output('find {} -name *.whl'.format(destination))
+        wheels = [entry.strip() for entry in result.splitlines()]
+        self.assertEqual(len(wheels), 1, wheels)
+        wheel = wheels[0]
+        result = self.session.output(
+            [python_cmd, '-c', 'import stupid; stupid.yes()'],
+            env=dict(PYTHONPATH=wheel))
+        self.assertEqual(result, 'yes\n')
+
+    def test_dirtbike_directory_envar(self):
+        # Test the $DIRTBIKE_DIRECTORY environment variable.
+        self._start_session()
+        python_cmd = 'python{}.{}'.format(*sys.version_info[:2])
+        self.session.call([python_cmd, 'setup.py', 'install'],
+                          env=dict(LC_ALL='en_US.UTF-8'))
+        # We need dirtbike to be installed in the schroot's system so
+        # that it can find system packages.
+        with chdir(self.example_dir):
+            call([
+                sys.executable,
+                'setup.py', '--no-user-cfg',
+                '--command-packages=stdeb.command',
+                'bdist_deb'
+                ])
+            # bdist_deb can't be told where to leave its artifacts, so
+            # make sure that cruft gets cleaned up after this test.
+            dist_dir = os.path.join(self.example_dir, 'deb_dist')
+            self.addCleanup(shutil.rmtree, os.path.join(dist_dir))
+            tar_gzs = glob(os.path.join(self.example_dir, '*.tar.gz'))
+            if len(tar_gzs) > 0:
+                assert len(tar_gzs) == 1, tar_gzs
+                self.addCleanup(os.remove, tar_gzs[0])
+            # Install the .deb and all its dependencies in the schroot and
+            # prove that we can import it.  This assumes you've set up the
+            # schroot with the mkschroot.sh script.  See DEVELOP.rst for
+            # details.
+            debs = glob(os.path.join(dist_dir, '*.deb'))
+            self.assertEqual(len(debs), 1)
+            deb = debs[0]
+            self.session.call(['gdebi', '-n', deb])
+        # Verify the .deb installed package.
+        result = self.session.output(
+            [python_cmd, '-c', 'import stupid; stupid.yes()'])
+        self.assertEqual(result, 'yes\n')
+        # Use dirtbike in the schroot to turn the installed package back into a
+        # whl.  To verify it, we'll purge the deb and run the package test with
+        # the .whl in sys.path.
+        destination = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, destination)
+        self.session.call(
+            '/usr/local/bin/dirtbike stupid',
+            env=dict(LC_ALL='en_US.UTF-8',
+                     DIRTBIKE_DIRECTORY=destination))
+        prefix = 'python3' if sys.version_info >= (3,) else 'python'
+        self.session.call('apt-get purge -y {}-stupid'.format(prefix))
+        result = self.session.output('find {} -name *.whl'.format(destination))
+        wheels = [entry.strip() for entry in result.splitlines()]
+        self.assertEqual(len(wheels), 1, wheels)
+        wheel = wheels[0]
+        result = self.session.output(
+            [python_cmd, '-c', 'import stupid; stupid.yes()'],
+            env=dict(PYTHONPATH=wheel))
+        self.assertEqual(result, 'yes\n')
+
+    def test_switch_overrides_envar(self):
+        # Test that the -d option overrides the $DIRTBIKE_DIRECTORY
+        # environment variable.
+        self._start_session()
+        python_cmd = 'python{}.{}'.format(*sys.version_info[:2])
+        self.session.call([python_cmd, 'setup.py', 'install'],
+                          env=dict(LC_ALL='en_US.UTF-8'))
+        # We need dirtbike to be installed in the schroot's system so
+        # that it can find system packages.
+        with chdir(self.example_dir):
+            call([
+                sys.executable,
+                'setup.py', '--no-user-cfg',
+                '--command-packages=stdeb.command',
+                'bdist_deb'
+                ])
+            # bdist_deb can't be told where to leave its artifacts, so
+            # make sure that cruft gets cleaned up after this test.
+            dist_dir = os.path.join(self.example_dir, 'deb_dist')
+            self.addCleanup(shutil.rmtree, os.path.join(dist_dir))
+            tar_gzs = glob(os.path.join(self.example_dir, '*.tar.gz'))
+            if len(tar_gzs) > 0:
+                assert len(tar_gzs) == 1, tar_gzs
+                self.addCleanup(os.remove, tar_gzs[0])
+            # Install the .deb and all its dependencies in the schroot and
+            # prove that we can import it.  This assumes you've set up the
+            # schroot with the mkschroot.sh script.  See DEVELOP.rst for
+            # details.
+            debs = glob(os.path.join(dist_dir, '*.deb'))
+            self.assertEqual(len(debs), 1)
+            deb = debs[0]
+            self.session.call(['gdebi', '-n', deb])
+        # Verify the .deb installed package.
+        result = self.session.output(
+            [python_cmd, '-c', 'import stupid; stupid.yes()'])
+        self.assertEqual(result, 'yes\n')
+        # Use dirtbike in the schroot to turn the installed package back into a
+        # whl.  To verify it, we'll purge the deb and run the package test with
+        # the .whl in sys.path.
+        destination = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, destination)
+        other_destination = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, other_destination)
+        self.session.call(
+            ('/usr/local/bin/dirtbike',
+             '-d', destination, 'stupid'),
+            env=dict(LC_ALL='en_US.UTF-8',
+                     DIRTBIKE_DIRECTORY=other_destination))
         prefix = 'python3' if sys.version_info >= (3,) else 'python'
         self.session.call('apt-get purge -y {}-stupid'.format(prefix))
         result = self.session.output('find {} -name *.whl'.format(destination))
