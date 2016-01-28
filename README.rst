@@ -9,17 +9,17 @@
 Purpose of the software
 =======================
 
-This is a Python program that takes packages that are already
-installed on a system and converts them to wheels.
+This is a Python program that takes packages that are already installed on a
+system and converts them to
+`wheels <https://www.python.org/dev/peps/pep-0427/>`__.
 
-That is an admittedly strange goal. The deeper purpose is to help
-packages like `pip` vendor their dependencies in a way compatible with
-the packaging policy for Debian, and hopefully other GNU/Linux
-distributions.
+That is an admittedly strange goal. The deeper purpose is to help Debian
+packages like `pip` vendor their dependencies in a way compatible with the
+packaging policy for Debian, and hopefully other GNU/Linux distributions.
 
-Therefore, I am eager to see this tool discussed and/or adopted by
-Fedora, Debian, Ubuntu, and any other software distributions that
-distribute pip as well as other Python packages.
+Therefore, we am eager to see this tool discussed and/or adopted by Fedora,
+Debian, Ubuntu, and any other software distributions that distribute pip as
+well as other Python packages.
 
 
 License
