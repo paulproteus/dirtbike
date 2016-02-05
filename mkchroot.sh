@@ -51,6 +51,6 @@ fi
 schroot -u root -c source:$CHROOT -- apt-get update
 
 # Do these installs here because in Ubuntu, some of them come from universe.
-schroot -u root -c source:$CHROOT -- apt-get install --yes python-setuptools python-stdeb python-wheel python3-setuptools python3-stdeb python3-wheel
+schroot -u root -c source:$CHROOT -- apt-get install --yes python-setuptools python-stdeb python-wheel python-mock python3-setuptools python3-stdeb python3-wheel
 
 echo "schroot $CHROOT is ready"
