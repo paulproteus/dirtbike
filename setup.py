@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(name='dirtbike',
-      version='0.2',
+      version='0.3',
       description=(
           'Convert already-installed Python modules ("distribution") to wheel'
       ),
