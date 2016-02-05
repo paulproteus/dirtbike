@@ -273,8 +273,7 @@ class TestDirtbike(unittest.TestCase):
         self._start_session()
         # Start fresh.
         self.session.call('apt-get purge -y python-six python3-six')
-        python_cmd = 'python{}.{}'.format(*sys.version_info[:2])
-        self.session.call([python_cmd, 'setup.py', 'install'],
+        self.session.call([self.python, 'setup.py', 'install'],
                           env=dict(LC_ALL='en_US.UTF-8'))
         self.session.call('apt-get install -y {}'.format(package))
         # Until issue #5 is fixed.
@@ -290,9 +289,37 @@ class TestDirtbike(unittest.TestCase):
         # Try to import the package with the version of Python foreign to the
         # one that created the wheel.
         result = self.session.output(
-            [python_cmd, '-Ssc', 'import six; print(six.__file__)'],
+            [self.python, '-Ssc', 'import six; print(six.__file__)'],
             env=dict(PYTHONPATH=wheel)).strip()
         # Python 2.7 and Python 3.4+ differ.
         assertRegex = getattr(self, 'assertRegex',
                               getattr(self, 'assertRegexpMatches'))
         assertRegex(result, r'\./six-.*\.whl/six.py')
+
+    def test_entry_points_survive(self):
+        # Issue #19 describes a problem where the entry_points.txt file
+        # doesn't survive from the .egg-info directory into the .dist-info
+        # directory in the resulting wheel.  This is because bdist_wheel
+        # called install_egg_info which deletes the entire .egg-info
+        # directory!  Make sure this doesn't happen.
+        self._start_session()
+        self._install_example()
+        # Use dirtbike in the schroot to turn the installed package back into a
+        # whl.  To verify it, we'll purge the deb and run the package test with
+        # the .whl in sys.path.
+        destination = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, destination)
+        self.session.call(
+            ('/usr/local/bin/dirtbike', '-d',
+             destination, 'stupid'),
+            env=dict(LC_ALL='en_US.UTF-8'))
+        # Verify that the zip file has an .egg-info/entry_points.txt.
+        whl_file = os.path.join(destination, 'stupid-2.0-py2.py3-none-any.whl')
+        ep_file = 'stupid-2.0.dist-info/entry_points.txt'
+        result = self.session.output(
+            [self.python, '-c',
+             "from zipfile import ZipFile; "
+             "print(ZipFile('{}').getinfo('{}').filename)".format(
+                 whl_file, ep_file)
+            ])
+        self.assertEqual(result.strip(), ep_file)
