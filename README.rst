@@ -17,7 +17,7 @@ That is an admittedly strange goal. The deeper purpose is to help Debian
 packages like `pip` vendor their dependencies in a way compatible with the
 packaging policy for Debian, and hopefully other GNU/Linux distributions.
 
-Therefore, we am eager to see this tool discussed and/or adopted by Fedora,
+Therefore, we are eager to see this tool discussed and/or adopted by Fedora,
 Debian, Ubuntu, and any other software distributions that distribute pip as
 well as other Python packages.
 
