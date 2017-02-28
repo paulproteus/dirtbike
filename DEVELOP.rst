@@ -101,4 +101,4 @@ If you want to keep the schroot sessions around after the test suite finishes,
 set the environment variable ``DIRTBIKE_DEBUG_SESSIONS`` to any non-empty
 value.  The session ids will be printed, and it's up to you to end them
 explicitly.  Note that multiple new, randomly named sessions may be created.
-You can destroy them all all quickly with ``schroot -e --all-sessions``.
+You can destroy them all quickly with ``schroot -e --all-sessions``.
